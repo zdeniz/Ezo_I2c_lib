@@ -1,5 +1,5 @@
 
-#include <sequencer1.h>
+#include "sequencer1.h"
 
 Sequencer1::Sequencer1(void (*step1)(), unsigned long time1){
     t1 = time1;
@@ -21,8 +21,8 @@ unsigned long Sequencer1::get_step1_time(){
 }
 
 void Sequencer1::run(){
-    if (millis() >= next_step_time) {  
+    if (HAL_GetTick() >= next_step_time) {  
         s1func();
-        next_step_time = millis() + t1; 
+        next_step_time = HAL_GetTick() + t1; 
     }
 }

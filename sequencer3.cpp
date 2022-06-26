@@ -1,5 +1,5 @@
 
-#include <sequencer3.h>
+#include "sequencer3.h"
 
 Sequencer3::Sequencer3( void (*step1)(), unsigned long time1, 
                         void (*step2)(), unsigned long time2,
@@ -44,25 +44,25 @@ void Sequencer3::run(){
     switch (current_step) {
         
         case STEP1:
-            if (millis() >= next_step_time) {  
+            if (HAL_GetTick() >= next_step_time) {  
                 s1func();
-                next_step_time = millis() + t1; 
+                next_step_time = HAL_GetTick() + t1; 
                 current_step = STEP2; 
             }
         break;
         
         case STEP2:
-            if (millis() >= next_step_time) {  
+            if (HAL_GetTick() >= next_step_time) {  
                 s2func();
-                next_step_time = millis() + t2; 
+                next_step_time = HAL_GetTick() + t2; 
                 current_step = STEP3; 
             }
         break;
         
         case STEP3:
-            if (millis() >= next_step_time) {  
+            if (HAL_GetTick() >= next_step_time) {  
                 s3func();
-                next_step_time = millis() + t3; 
+                next_step_time = HAL_GetTick() + t3; 
                 current_step = STEP1; 
             }
         break;

@@ -2,7 +2,7 @@
 #ifndef SEQUENCER4_H
 #define SEQUENCER4_H
 
-#include "Arduino.h"
+#include "main.h"
 
 class Sequencer4{
     public:

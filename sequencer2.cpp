@@ -1,5 +1,5 @@
 
-#include <sequencer2.h>
+#include "sequencer2.h"
 
 Sequencer2::Sequencer2( void (*step1)(), unsigned long time1,
                         void (*step2)(), unsigned long time2){
@@ -35,17 +35,17 @@ void Sequencer2::run(){
     switch (current_step) {
         
         case STEP1:
-            if (millis() >= next_step_time) {  
+            if (HAL_GetTick() >= next_step_time) {  
                 s1func();
-                next_step_time = millis() + t1; 
+                next_step_time = HAL_GetTick() + t1; 
                 current_step = STEP2; 
             }
         break;
         
         case STEP2:
-            if (millis() >= next_step_time) {  
+            if (HAL_GetTick() >= next_step_time) {  
                 s2func();
-                next_step_time = millis() + t2; 
+                next_step_time = HAL_GetTick() + t2; 
                 current_step = STEP1; 
             }
         break;
