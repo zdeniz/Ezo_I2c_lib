@@ -1,98 +1,103 @@
 
 #include "Ezo_i2c.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "i2c.h"
-#include "main.h"
-#include "stdio.h"
+#include "ezo_hw_iface.h"
+#include "stdbool.h"
 
-Ezo_board::Ezo_board(uint8_t address) {
-    this->i2c_address = address;
+enum ezo_errors { SUCCESS,
+                  FAIL,
+                  NOT_READY,
+                  NO_DATA,
+                  NOT_READ_CMD };
+
+typedef struct {
+    uint8_t i2c_address;
+    const char* name;
+    float reading;
+    bool issued_read;
+    enum ezo_errors error;
+    const uint8_t bufferlen;
+} Ezo_i2c;
+
+const char* Ezo_board_get_name(Ezo_i2c* ezo) {
+    return ezo->name;
 }
 
-Ezo_board::Ezo_board(uint8_t address, const char* name) {
-    this->i2c_address = address;
-    this->name = name;
+uint8_t Ezo_board_get_address(Ezo_i2c* ezo) {
+    return ezo->i2c_address;
 }
 
-const char* Ezo_board::get_name() {
-    return this->name;
+void Ezo_board_set_address(Ezo_i2c* ezo, uint8_t address) {
+    ezo->i2c_address = address;
 }
 
-uint8_t Ezo_board::get_address() {
-    return i2c_address;
+void Ezo_board_send_cmd(Ezo_i2c* ezo, const char* command) {
+    i2c_transmit_data(ezo->i2c_address, (const uint8_t*)command);
+    ezo->issued_read = false;
 }
 
-void Ezo_board::set_address(uint8_t address) {
-    this->i2c_address = address;
+void Ezo_board_send_read_cmd(Ezo_i2c* ezo) {
+    Ezo_board_send_cmd(ezo, "r");
+    ezo->issued_read = true;
 }
 
-void Ezo_board::send_cmd(const char* command) {
-    HAL_I2C_Master_Transmit(&hi2c1, this->i2c_address, (uint8_t*)command, sizeof(command), 100);
-    // Wire.beginTransmission(this->i2c_address);
-    // Wire.write(command);
-    // Wire.endTransmission();
-    this->issued_read = false;
-}
-
-void Ezo_board::send_read_cmd() {
-    send_cmd("r");
-    this->issued_read = true;
-}
-
-void Ezo_board::send_cmd_with_num(const char* cmd, float num, uint8_t decimal_amount) {
+void Ezo_board_send_cmd_with_num(Ezo_i2c* ezo, const char* cmd, float num, uint8_t decimal_amount) {
     char buf[30];
-
     sprintf(buf, "%s %.*f", cmd, decimal_amount, num);
 
-    const char* pointer = buf;
-    send_cmd(pointer);
+    Ezo_board_send_cmd(ezo, (const char*)buf);
 }
 
-void Ezo_board::send_read_with_temp_comp(float temperature) {
-    send_cmd_with_num("rt,", temperature, 3);
-    this->issued_read = true;
+void Ezo_board_send_read_with_temp_comp(Ezo_i2c* ezo, float temperature) {
+    Ezo_board_send_cmd_with_num(ezo, "rt,", temperature, 3);
+    ezo->issued_read = true;
 }
 
-enum Ezo_board::errors Ezo_board::receive_read_cmd() {
-    char _sensordata[this->bufferlen];
-    this->error = receive_cmd(_sensordata, bufferlen);
+enum ezo_errors Ezo_board_receive_read_cmd(Ezo_i2c* ezo) {
+    char _sensordata[ezo->bufferlen];
+    ezo->error = receive_cmd(_sensordata, bufferlen);
 
-    if (this->error == SUCCESS) {
-        if (this->issued_read == false) {
-            this->error = NOT_READ_CMD;
+    if (ezo->error == SUCCESS) {
+        if (ezo->issued_read == false) {
+            ezo->error = NOT_READ_CMD;
         } else {
-            this->reading = atof(_sensordata);
+            ezo->reading = atof(_sensordata);
         }
     }
-    return this->error;
+    return ezo->error;
 }
 
-bool Ezo_board::is_read_poll() {
-    return this->issued_read;
+bool Ezo_board_is_read_poll(Ezo_i2c* ezo) {
+    return ezo->issued_read;
 }
 
-float Ezo_board::get_last_received_reading() {
-    return this->reading;
+float Ezo_board_get_last_received_reading(Ezo_i2c* ezo) {
+    return ezo->reading;
 }
 
-enum Ezo_board::errors Ezo_board::get_error() {
-    return this->error;
+enum ezo_errors Ezo_board_get_error(Ezo_i2c* ezo) {
+    return ezo->error;
 }
 
-enum Ezo_board::errors Ezo_board::receive_cmd(char* sensordata_buffer, uint8_t buffer_len) {
-    uint8_t code = 0;
-    // uint8_t in_char = 0;s
+enum ezo_errors Ezo_board_receive_cmd(Ezo_i2c* ezo, char* sensordata_buffer, uint16_t buffer_len) {
+    uint8_t code = 255;
+    uint8_t data[buffer_len];
+    // uint8_t in_char = 0;
 
-    memset(sensordata_buffer, 0, buffer_len);  // clear sensordata array;
+    memset(data, 0, buffer_len);  // clear sensordata array;
 
-    HAL_I2C_Master_Receive(&hi2c1, this->i2c_address, (uint8_t*)sensordata_buffer, (uint8_t)(buffer_len - 1), 1000);
-    // Wire.requestFrom(this->i2c_address, (uint8_t)(buffer_len-1), (uint8_t)1);
+    i2c_recieve_data(ezo->i2c_address, data, buffer_len);
+    strcpy(sensordata_buffer, (const char *)data);
+
+    code = sensordata_buffer[0];
+    // Wire.requestFrom(ezo->i2c_address, (uint8_t)(buffer_len-1), (uint8_t)1);
     // code = Wire.read();
 
-    // Wire.beginTransmission(this->i2c_address);
+    // Wire.beginTransmission(ezo->i2c_address);
     //  while (Wire.available()) {
     //    in_char = Wire.read();
 
@@ -109,20 +114,20 @@ enum Ezo_board::errors Ezo_board::receive_cmd(char* sensordata_buffer, uint8_t b
     // should last array point be set to 0 to stop string overflows?
     switch (code) {
         case 1:
-            this->error = SUCCESS;
+            ezo->error = SUCCESS;
             break;
 
         case 2:
-            this->error = FAIL;
+            ezo->error = FAIL;
             break;
 
         case 254:
-            this->error = NOT_READY;
+            ezo->error = NOT_READY;
             break;
 
         case 255:
-            this->error = NO_DATA;
+            ezo->error = NO_DATA;
             break;
     }
-    return this->error;
+    return ezo->error;
 }
