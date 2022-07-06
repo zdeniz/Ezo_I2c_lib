@@ -4,24 +4,24 @@
 
 #include "main.h"
 
-class Sequencer1{
-    public:
+// class Sequencer1{
+//     public:
     
-    Sequencer1( void (*step1)(), unsigned long time1);
+//     Sequencer1( void (*step1)(), unsigned long time1);
     
-    void reset();
+//     void reset();
     
-    void run();
+//     void run();
     
-    void set_step1_time(unsigned long time);
-    unsigned long get_step1_time();
+//     void set_step1_time(unsigned long time);
+//     unsigned long get_step1_time();
     
-    private:
+//     private:
     
-    unsigned long t1 = 0;
-    void (*s1func)() = 0;
+//     unsigned long t1 = 0;
+//     void (*s1func)() = 0;
     
-    uint32_t next_step_time = 0;
-};
+//     uint32_t next_step_time = 0;
+// };
 
 #endif
