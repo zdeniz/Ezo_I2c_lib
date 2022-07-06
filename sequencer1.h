@@ -4,24 +4,18 @@
 
 #include "main.h"
 
-// class Sequencer1{
-//     public:
-    
-//     Sequencer1( void (*step1)(), unsigned long time1);
-    
-//     void reset();
-    
-//     void run();
-    
-//     void set_step1_time(unsigned long time);
-//     unsigned long get_step1_time();
-    
-//     private:
-    
-//     unsigned long t1 = 0;
-//     void (*s1func)() = 0;
-    
-//     uint32_t next_step_time = 0;
-// };
+typedef struct
+{
+    unsigned long t1;
+    void (*s1func)();
+    uint32_t next_step_time;
+} sequence;
+
+
+void Sequencer1(sequence *seq, void (*step1)(), unsigned long time1);
+void Sequencer1_reset(sequence *seq);
+void Sequencer1_run(sequence *seq);
+void Sequencer1_set_step1_time(sequence *seq, unsigned long time);
+unsigned long Sequencer1_get_step1_time(sequence *seq);
 
 #endif
