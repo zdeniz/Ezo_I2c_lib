@@ -32,11 +32,11 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum { SUCCESS,
-               FAIL,
-               NOT_READY,
-               NO_DATA,
-               NOT_READ_CMD
+typedef enum { EZO_SUCCESS,
+               EZO_FAIL,
+               EZO_NOT_READY,
+               EZO_NO_DATA,
+               EZO_NOT_READ_CMD
 } ezo_errors;
 
 typedef struct {
@@ -44,7 +44,7 @@ typedef struct {
     const char* name;
     float reading;
     bool issued_read;
-    enum ezo_errors error;
+    ezo_errors error;
     const uint8_t bufferlen;
 } Ezo_i2c;
 
