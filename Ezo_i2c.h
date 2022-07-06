@@ -25,78 +25,44 @@ SOFTWARE
 #ifndef EZO_I2C_H
 #define EZO_I2C_H
 
-#include "main.h"
-
-#include "i2c.h"
-
-
-
-class Ezo_board{
-	public:
-	
-	//errors
-	enum errors {SUCCESS, FAIL, NOT_READY, NO_DATA, NOT_READ_CMD};
-	
-	//constructors
-	Ezo_board(uint8_t address);	 //Takes I2C address of the device
-	Ezo_board(uint8_t address, const char* name); //Takes I2C address of the device
-												//as well a name of your choice
-	
-	void send_cmd(const char* command);	
-	//send any command in a string, see the devices datasheet for available i2c commands
-	
-	void send_read_cmd();	
-	//sends the "R" command to the device and sets issued_read() to true, 
-	//so we know to parse the data when we receive it with receive_read()
-
-	void send_cmd_with_num(const char* cmd, float num, uint8_t decimal_amount = 3);
-	//sends any command with the number appended as a string afterwards.
-	//ex. PH.send_cmd_with_num("T,", 25.0); will send "T,25.000"
-	
-	void send_read_with_temp_comp(float temperature);
-	//sends the "RT" command with the temperature converted to a string
-	//to the device and sets issued_read() to true, 
-	//so we know to parse the data when we receive it with receive_read()
-		
-	enum errors receive_cmd(char* sensordata_buffer, uint8_t buffer_len); 
-	//receive the devices response data into a buffer you supply.
-	//Buffer should be long enough to hold the longest command 
-	//you'll receive. We recommand 32 bytes/chars as a default
-	
-	enum errors receive_read_cmd(); 
-	//gets the read response from the device, and parses it into the reading variable
-	//if send_read() wasn't used to send the "R" command and issued_read() isnt set, the function will 
-	//return the "NOT_READ_CMD" error
-
-	bool is_read_poll();		
-	//function to see if issued_read() was set. 
-	//Useful for determining if we should call receive_read() (if is_read_poll() returns true) 
-	//or recieve_cmd() if is_read_poll() returns false) 
-								
-	float get_last_received_reading(); 
-	//returns the last reading the device received as a float
-	
-	const char* get_name();		
-	//returns a pointer to the name string
-	
-	enum errors get_error();	
-	//returns the error status of the last received command, 
-	//used to check the validity of the data returned by get_reading()
-	
-    uint8_t get_address();
-    //returns the address of the device
-    
-    void set_address(uint8_t address);
-    //lets you change the I2C address of the device
-    
-	protected:
-	uint8_t i2c_address;
-	const char* name = 0;
-	float reading = 0;
-	bool issued_read = false;
-	enum errors error;	
-	const static uint8_t bufferlen = 32;
-};
-
-
+#ifdef __cplusplus
+extern "C" {
 #endif
+
+#include <stdint.h>
+#include <stdbool.h>
+
+typedef enum { SUCCESS,
+               FAIL,
+               NOT_READY,
+               NO_DATA,
+               NOT_READ_CMD
+} ezo_errors;
+
+typedef struct {
+    uint8_t i2c_address;
+    const char* name;
+    float reading;
+    bool issued_read;
+    enum ezo_errors error;
+    const uint8_t bufferlen;
+} Ezo_i2c;
+
+const char* Ezo_board_get_name(Ezo_i2c* ezo);
+uint8_t Ezo_board_get_address(Ezo_i2c* ezo);
+void Ezo_board_set_address(Ezo_i2c* ezo, uint8_t address);
+void Ezo_board_send_cmd(Ezo_i2c* ezo, const char* command);
+void Ezo_board_send_read_cmd(Ezo_i2c* ezo);
+void Ezo_board_send_cmd_with_num(Ezo_i2c* ezo, const char* cmd, float num, uint8_t decimal_amount);
+void Ezo_board_send_read_with_temp_comp(Ezo_i2c* ezo, float temperature);
+ezo_errors Ezo_board_receive_read_cmd(Ezo_i2c* ezo);
+bool Ezo_board_is_read_poll(Ezo_i2c* ezo);
+float Ezo_board_get_last_received_reading(Ezo_i2c* ezo);
+ezo_errors Ezo_board_get_error(Ezo_i2c* ezo);
+ezo_errors Ezo_board_receive_cmd(Ezo_i2c* ezo, char* sensordata_buffer, uint16_t buffer_len);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* EZO_I2C_H */

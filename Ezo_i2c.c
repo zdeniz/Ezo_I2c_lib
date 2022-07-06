@@ -1,27 +1,10 @@
 
 #include "Ezo_i2c.h"
 
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "ezo_hw_iface.h"
-#include "stdbool.h"
-
-enum ezo_errors { SUCCESS,
-                  FAIL,
-                  NOT_READY,
-                  NO_DATA,
-                  NOT_READ_CMD };
-
-typedef struct {
-    uint8_t i2c_address;
-    const char* name;
-    float reading;
-    bool issued_read;
-    enum ezo_errors error;
-    const uint8_t bufferlen;
-} Ezo_i2c;
 
 const char* Ezo_board_get_name(Ezo_i2c* ezo) {
     return ezo->name;
@@ -57,9 +40,9 @@ void Ezo_board_send_read_with_temp_comp(Ezo_i2c* ezo, float temperature) {
     ezo->issued_read = true;
 }
 
-enum ezo_errors Ezo_board_receive_read_cmd(Ezo_i2c* ezo) {
+ezo_errors Ezo_board_receive_read_cmd(Ezo_i2c* ezo) {
     char _sensordata[ezo->bufferlen];
-    ezo->error = receive_cmd(_sensordata, bufferlen);
+    ezo->error = receive_cmd(_sensordata, ezo->bufferlen);
 
     if (ezo->error == SUCCESS) {
         if (ezo->issued_read == false) {
@@ -79,11 +62,11 @@ float Ezo_board_get_last_received_reading(Ezo_i2c* ezo) {
     return ezo->reading;
 }
 
-enum ezo_errors Ezo_board_get_error(Ezo_i2c* ezo) {
+ezo_errors Ezo_board_get_error(Ezo_i2c* ezo) {
     return ezo->error;
 }
 
-enum ezo_errors Ezo_board_receive_cmd(Ezo_i2c* ezo, char* sensordata_buffer, uint16_t buffer_len) {
+ezo_errors Ezo_board_receive_cmd(Ezo_i2c* ezo, char* sensordata_buffer, uint16_t buffer_len) {
     uint8_t code = 255;
     uint8_t data[buffer_len];
     // uint8_t in_char = 0;
@@ -91,7 +74,7 @@ enum ezo_errors Ezo_board_receive_cmd(Ezo_i2c* ezo, char* sensordata_buffer, uin
     memset(data, 0, buffer_len);  // clear sensordata array;
 
     i2c_recieve_data(ezo->i2c_address, data, buffer_len);
-    strcpy(sensordata_buffer, (const char *)data);
+    strcpy(sensordata_buffer, (const char*)data);
 
     code = sensordata_buffer[0];
     // Wire.requestFrom(ezo->i2c_address, (uint8_t)(buffer_len-1), (uint8_t)1);
