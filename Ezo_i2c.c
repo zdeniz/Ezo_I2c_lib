@@ -1,11 +1,17 @@
 
 #include "Ezo_i2c.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
-#include "ezo_hw_iface.h"
+#include "Ezo_hw_iface.h"
+
+void Ezo_board_init(Ezo_i2c* device, uint8_t address, const char* name) {
+    device->i2c_address = address;
+    device->name = name;
+    device->bufferlen = 40;
+}
 
 const char* Ezo_board_get_name(Ezo_i2c* device) {
     return device->name;
@@ -70,30 +76,12 @@ ezo_errors Ezo_board_get_error(Ezo_i2c* device) {
 ezo_errors Ezo_board_receive_cmd(Ezo_i2c* device, char* sensordata_buffer, uint16_t buffer_len) {
     uint8_t code = 255;
     uint8_t data[buffer_len];
-    // uint8_t in_char = 0;
-
     memset(data, 0, buffer_len);  // clear sensordata array;
 
-    i2c_recieve_data(device->i2c_address, data, buffer_len);
-    strcpy(sensordata_buffer, (const char*)data);
-
-    code = sensordata_buffer[0];
-    // Wire.requestFrom(device->i2c_address, (uint8_t)(buffer_len-1), (uint8_t)1);
-    // code = Wire.read();
-
-    // Wire.beginTransmission(device->i2c_address);
-    //  while (Wire.available()) {
-    //    in_char = Wire.read();
-
-    //   if (in_char == 0) {
-    //     //Wire.endTransmission();
-    //     break;
-    //   }
-    //   else {
-    //     sensordata_buffer[sensor_bytes_received] = in_char;
-    //     sensor_bytes_received++;
-    //   }
-    // }
+    if (i2c_recieve_data(device->i2c_address, data, buffer_len) == 0) {  // Readşing OK
+        code = data[0];
+        strcpy(sensordata_buffer, (const char*)&data[1]);
+    }
 
     // should last array point be set to 0 to stop string overflows?
     switch (code) {
