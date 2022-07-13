@@ -10,7 +10,7 @@ char receive_buffer[32] = {0};  // buffer used to hold each boards response
 
 // prints the boards name and I2C address
 void print_device_info(Ezo_i2c* device) {
-    Serial_Write("%s %d\n\r", Ezo_board_get_name(device), Ezo_board_get_address(device));
+    Serial_Write("Board: %s, \tAddress: %d\r\n", Ezo_board_get_name(device), Ezo_board_get_address(device));
 }
 
 // used for printing either a successmak_string message if a command was successful or the error type if it wasnt
@@ -39,7 +39,7 @@ void print_success_or_error(Ezo_i2c* device, const char* success_string) {
 }
 
 void receive_and_print_response(Ezo_i2c* device) {
-    Ezo_board_receive_cmd(device, receive_buffer, 32);  // put the response into the buffer
+    Ezo_board_receive_cmd(device, receive_buffer, device->bufferlen);  // put the response into the buffer
 
     print_success_or_error(device, " - ");  // print if our response is an error or not
     print_device_info(device);              // print our boards name and address
@@ -50,6 +50,6 @@ void receive_and_print_reading(Ezo_i2c* device) {      // function to decode the
     Serial_Write("%s: ", Ezo_board_get_name(device));  // print the name of the circuit getting the reading
     Ezo_board_receive_read_cmd(device);                // get the response data and put it into the [Device].reading variable if successful
 
-    sprintf(s_buffer, "%.*f", 2, Ezo_board_get_last_received_reading(device));
+    sprintf(s_buffer, "%.*f", 3, Ezo_board_get_last_received_reading(device));
     print_success_or_error(device, (const char*)s_buffer);  // print either the reading or an error message
 }
