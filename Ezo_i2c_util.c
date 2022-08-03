@@ -12,7 +12,7 @@ char answer_buffer[50] = {0};
 
 // prints the boards name and I2C address
 void print_device_info(Ezo_i2c* device) {
-    Serial_Write("Board: %s, \tAddress: %d\r\n", Ezo_board_get_name(device), Ezo_board_get_address(device));
+    Serial_Write("Board: %s, Address: %d\r\n", Ezo_board_get_name(device), Ezo_board_get_address(device));
 }
 
 // used for printing either a successmak_string message if a command was successful or the error type if it wasnt
