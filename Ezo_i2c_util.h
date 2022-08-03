@@ -9,6 +9,8 @@
 // for printing various responses and info
 // that would otherwise be duplicated in many examples
 
+extern char answer_buffer[50];
+
 void print_device_info(Ezo_i2c* device);
 // prints the name and address of the given device
 
